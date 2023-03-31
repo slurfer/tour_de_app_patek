@@ -23,24 +23,24 @@ export const Header = () => {
       <div className="m-auto mb-10 hidden w-[92%] md:flex">
         {" "}
         {/*VISIBLE ON COMPUTER*/}
-        <div className="w-[20%]">
+        <div className="w-[20%] pt-[2px]">
           <Sidebar hidden />
         </div>
-        <div className={clsx("w-[60%] text-center text-5xl font-bold", mode ? "text-white" : "")}>
+        <div className={clsx("w-[60%] text-center text-5xl font-bold", mode ? "text-white " : "")}>
           <p className="m-auto flex w-fit">
-            CHANGE. <span className={!mode ? "text-light_blue hover:opacity-80" : "text-white"}>&nbsp;THE TEXT</span>
+            Stick<span className={!mode ? "text-light_blue hover:opacity-80" : "text-white"}>&nbsp;notes.</span>
           </p>
         </div>
         <div className="flex w-[20%] justify-end">
           <motion.img
             whileHover={{ scale:1.2 }}
-            className="mr-8 h-[40px] cursor-pointer"
+            className="my-auto mr-8 h-[45px] cursor-pointer"
             src={i18n.language =="en" ? "cs.png" : "en.png"}
             onClick={() => changeLanguage(i18n.language =="cs" ? "en" : "cs")}
           />        
           <motion.img
             whileHover={{ scale:1.2 }}
-            className="h-[40px] w-[40px] cursor-pointer"
+            className="my-auto h-[40px] w-[40px] cursor-pointer"
             src={mode ? "zmena_modu_bila.png" : "zmena_modu.png"}
             onClick={() => dispatch(toggleMode())}
           />

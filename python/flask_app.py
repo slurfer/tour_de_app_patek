@@ -4,7 +4,7 @@ import flask
 import json
 from typing import Dict, Tuple, List, Any, Callable
 from flask_cors import CORS
-from data_classes.programmer import Programmer
+from data_classes.note import Note
 from database_table import DatabaseTable
 from constants import *
 from tour_de_app_database import TourDeAppDatabase
@@ -13,14 +13,19 @@ from Errors import *
 from functools import wraps
 import jwt
 from datetime import datetime, timedelta
+import requests
+from data_classes.commit import Commit
 
 DATABASE = TourDeAppDatabase()
 
 app = Flask("My first server")
 CORS(app)
 
-app.config['SECRET_KEY'] = 'AAAAB3NzaC1yc2EAAAADAQABAAABgQC6wTKMh0D5C68Un/OTRZEZnbPQsDv/QpYCHAD9Mr0g+Et4M7ibBAEc+S/rZQZ+sGZ4167nt+6QsajTSZGToiP/FfP8ei/Q8Io5Zbn1+ejC9jxmIlM6p0qVS98qIiHZZPS3E/+pUF5jLEUEKB/AwuyyNJyt9NDTAfWC00CycIVWei0bHs/ooTmhoHgih2kIb71UK4XZ5Lw/7+bfMtqz+iNflWxWSNF70vyytKjNpGthZy8m5Ji/Tm/2YYiDdTeQ4bInvR7oVSuiFbk2VhiAL14zeaYL2RWQLOmLQgo5nvg5b1HBU6KYMdKSiPj4B2GYhf9hBu7dfT0HytsLNAOUZl932cdXSpApzz0gML3EtiorkEPXk7VmXD9AA4UsXVY2IwBwzZYhBqJutXYdDMd6zcgdvaHoFk7gyihkdlCJyMaCwZybOf3wuXXz5j6Uh37iQQ9BPB2OZzsn8juGdnlGTPLvpawcBlABnxxYnzu7LB84ool8VUZtR2zPt1Eukou/neE'
 
+
+
+
+app.config['SECRET_KEY'] = 'AAAAB3NzaC1yc2EAAAADAQABAAABgQC6wTKMh0D5C68Un/OTRZEZnbPQsDv/QpYCHAD9Mr0g+Et4M7ibBAEc+S/rZQZ+sGZ4167nt+6QsajTSZGToiP/FfP8ei/Q8Io5Zbn1+ejC9jxmIlM6p0qVS98qIiHZZPS3E/+pUF5jLEUEKB/AwuyyNJyt9NDTAfWC00CycIVWei0bHs/ooTmhoHgih2kIb71UK4XZ5Lw/7+bfMtqz+iNflWxWSNF70vyytKjNpGthZy8m5Ji/Tm/2YYiDdTeQ4bInvR7oVSuiFbk2VhiAL14zeaYL2RWQLOmLQgo5nvg5b1HBU6KYMdKSiPj4B2GYhf9hBu7dfT0HytsLNAOUZl932cdXSpApzz0gML3EtiorkEPXk7VmXD9AA4UsXVY2IwBwzZYhBqJutXYdDMd6zcgdvaHoFk7gyihkdlCJyMaCwZybOf3wuXXz5j6Uh37iQQ9BPB2OZzsn8juGdnlGTPLvpawcBlABnxxYnzu7LB84ool8VUZtR2zPt1Eukou/neE'
 
 # ========================== TOOLS ==========================
 def get_data_from_request(request: Request) -> Dict[str, Any]:
@@ -94,6 +99,12 @@ def handle_response(f):
         return flask_response
     return decorated_function
 
+def response_to_json(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        return json.dumps(f(*args, **kwargs))
+    return decorated_function
+
 
 # decorator for verifying the JWT
 def token_required(f):
@@ -137,60 +148,187 @@ def admin_privilege(f):
     return decorated
 
 
+def update_commits():
+    sql_select = Commit.generate_select_query()
+    select_response = DATABASE.select(sql_select)
+    if len(select_response.data) > 0:
+        last_commit = Commit(query=select_response.data[-1])
+        last_commit_date = last_commit.values[DATE].value
+        response = requests.get(f'{URL}/commit/filter/{last_commit_date}', headers=HEADERS)
+        data = json.loads(response.text)
+        data.pop(0)
+    else:
+        response = requests.get(f'{URL}/commit/', headers=HEADERS)
+        data = json.loads(response.text)
+    for commit in data:
+        commit_object = Commit(
+            commit_id=commit['commit_id'],
+            creator_id=commit['creator_id'],
+            date=commit['date'],
+            lines_added=commit['lines_added'],
+            lines_removed=commit['lines_removed'],
+            description=commit['description'],
+        )
+        sql_insert, sql_insert_values = commit_object.generate_insert_query()
+        print(sql_insert, sql_insert_values)
+        query = DATABASE.insert(sql_insert, sql_insert_values, return_last_added=False)
+
+
+def get_commits_from_database():
+    update_commits()
+    sql_select = Commit.generate_select_query()
+    select_response = DATABASE.select(sql_select)
+    data = []
+    for commit in select_response.data:
+        data.append(Commit(query=commit))
+    return data
+
+
+update_commits()
+
+# ========================== BASICS ==========================
+
+@app.route('/basics/uptime', methods=['GET'])
+@handle_errors
+@handle_response
+@response_to_json
+def get_uptime():
+    response = requests.get(f'{URL}/sysinfo/', headers=HEADERS)
+    data = json.loads(response.text)
+    print(data)
+    output = {}
+    output['boot_time'] = data['boot_time']
+    output['platform'] = data['platform']
+    print(output)
+    return output
+
+
+
+@app.route('/basics/commits', methods=['GET'])
+@handle_errors
+@handle_response
+@response_to_json
+def get_commits():
+    data = get_commits_from_database()
+    # print(data)
+    output = {}
+    output['count'] = len(data)
+    output['last'] = data[-1].__dict__()
+    print(output)
+    return output
+
+
+@app.route('/monitor/info', methods=['GET'])
+@handle_errors
+@handle_response
+@response_to_json
+def get_monitor_info():
+    response = requests.get(f'{URL}/sysinfo/', headers=HEADERS)
+    data = json.loads(response.text)
+    # print(data)
+    output = {}
+    output['cpu_load'] = data['cpu_load']
+    output['ram_usage'] = data['ram_usage']
+    output['disk_usage'] = data['disk_usage']
+    print(output)
+    return output
+
+
+
+@app.route('/bacics/topProgrammer', methods=['GET'])
+@handle_errors
+@handle_response
+@response_to_json
+def get_top_programmer():
+    commits = get_commits_from_database()
+    programmers = {}
+    for commit in commits:
+        programmer_id = commit.values[CREATOR_ID].value
+        if programmer_id not in programmers:
+            programmers[programmer_id] = 1
+        else:
+            programmers[programmer_id] += 1
+    top_programmer = max(programmers, key=programmers.get)
+    print(top_programmer)
+    output = {
+        'top_programmer': top_programmer,
+    }
+    return output
+
+
+@app.route('/longStats/commitsByDate', methods=['GET'])
+@handle_errors
+@handle_response
+@response_to_json
+def get_commits_by_date():
+    commits = get_commits_from_database()
+    commits_by_date = {}
+    for commit in commits:
+        date = commit.values[DATE].value.split('T')[0]  # Extract the date component
+        if date not in commits_by_date:
+            commits_by_date[date] = 1
+        else:
+            commits_by_date[date] += 1
+    print(commits_by_date)
+    # Sort the dictionary by the values in descending order
+    sorted_commits_by_date = dict(sorted(commits_by_date.items(), key=lambda item: item[1], reverse=True))
+
+    # Select only the top 10 dates with the highest number of commits
+    top_10_commits_by_date = dict(list(sorted_commits_by_date.items())[:10])
+
+    output = {
+        'commits_by_date': top_10_commits_by_date,
+    }
+    return output
+
 
 
 
 
 # ========================== PROGRAMMER ==========================
 
-@app.route('/programmer', methods=['POST'])
+@app.route('/note', methods=['POST'])
 @handle_errors
 @handle_response
-@token_required
-@admin_privilege
-def create_programmer(user: Programmer):
+def create_note():
     data = get_data_from_request(request)
-    programmer = Programmer(request = data)
-    check_unigue_values(programmer, Programmer)
-    sql_insert, sql_insert_values = programmer.generate_insert_query()
+    note = Note(request = data)
+    check_unigue_values(note, Note)
+    sql_insert, sql_insert_values = note.generate_insert_query()
     query = DATABASE.insert(sql_insert, sql_insert_values).data[0]
-    response = Programmer(query = query)
+    response = Note(query = query)
     print('-'*100)
 
     return response
 
 
-@app.route('/programmer', methods=['GET'])
+@app.route('/note', methods=['GET'])
 @handle_errors
 @handle_response
-@token_required
-@admin_privilege
-def get_programmer_info(user: Programmer):
-    sql_select = Programmer.generate_select_query()
+def get_note_info():
+    sql_select = Note.generate_select_query()
     select_response = DATABASE.select(sql_select)
     response = []
     for item in select_response.data:
         print(item)
-        member = Programmer(query=item)
+        member = Note(query=item)
         response.append(member.__dict__())
 
     response_str = json.dumps(response, ensure_ascii=False)
     return response_str
 
 
-@app.route('/programmer/<id>', methods=['PUT'])
+@app.route('/note/<id>', methods=['PUT'])
 @handle_errors
 @handle_response
-@token_required
-@admin_privilege
-def update_programmer(user: Programmer, id: str):
-    DATABASE.check_if_id_exist(PROGRAMMERS_DATABASE, int(id))
+def update_note(id: str):
+    DATABASE.check_if_id_exist(NOTES_DATABASE, int(id))
     data = get_data_from_request(request)
     if PASSWORD in data.keys() and data[PASSWORD] == None:
         data.pop(PASSWORD)
-    programmer = Programmer(request=data, id=id)
-    check_unigue_values(programmer, Programmer)
-    sql_insert, sql_insert_values = programmer.generate_update_query()
+    note = Note(request=data, id=id)
+    check_unigue_values(note, Note)
+    sql_insert, sql_insert_values = note.generate_update_query()
     print(sql_insert, sql_insert_values)
     response = DATABASE.update(sql_insert, sql_insert_values)
 
@@ -198,14 +336,12 @@ def update_programmer(user: Programmer, id: str):
 
 
 
-@app.route('/programmer/<id>', methods=['DELETE'])
+@app.route('/note/<id>', methods=['DELETE'])
 @handle_errors
 @handle_response
-@token_required
-@admin_privilege
-def delete_programmer(user: Programmer, id: str):
-    sql_command: str = f'DELETE FROM {PROGRAMMERS_DATABASE} WHERE id = ?;'
-    DATABASE.check_if_id_exist(PROGRAMMERS_DATABASE, int(id))
+def delete_note(id: str):
+    sql_command: str = f'DELETE FROM {NOTES_DATABASE} WHERE id = ?;'
+    DATABASE.check_if_id_exist(NOTES_DATABASE, int(id))
     response = DATABASE.delete(sql_command, [id])
 
     return response
@@ -214,50 +350,8 @@ def delete_programmer(user: Programmer, id: str):
 
 
 
-# ========================== LOGIN ==========================
 
 
-@app.route('/login', methods=['POST'])
-@handle_errors
-@handle_response
-def login():
-    """Login user and return JWT token."""
-    data = get_data_from_request(request)
-
-    # -------- check whether login and password are provided --------
-    if LOGIN not in data.keys():
-        raise WrongCredentials('Login not provided.')
-    if PASSWORD not in data.keys():
-        raise WrongCredentials('Password not provided.')
-    user_identifyer = data[LOGIN]
-    
-    # -------- validate password --------
-    password_is_valid = False
-    for method in [USERNAME, EMAIL]: # try to login by username and then by email
-        # check if user exists
-        sql_insert, sql_insert_values = Programmer().filter_by_column_value(method, user_identifyer)
-        database_programmer = DATABASE.select(sql_insert, sql_insert_values).data
-        if len(database_programmer) == 0:
-            # user does not exist
-            continue
-        # user exists - check password
-        database_user = Programmer(query=database_programmer[0])
-
-        password_is_valid = database_user.values[PASSWORD].validate_password(data[PASSWORD])
-        if password_is_valid:
-            break
-    
-    if password_is_valid:
-        # user is valid - provide JWT token
-        token = jwt.encode({
-            ID: database_user.values[ID].value,
-            'exp' : datetime.utcnow() + timedelta(days=7)
-        }, app.config['SECRET_KEY'], algorithm='HS256')
-        print(database_user.__dict__())
-        return json.dumps({'token': token, 'user': database_user.__dict__()})
-    else:
-        # user is not valid - raise exception
-        raise WrongCredentials(user_identifyer)
 
 
 

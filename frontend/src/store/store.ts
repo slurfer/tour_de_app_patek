@@ -6,7 +6,7 @@ import thunk from "redux-thunk"
 import combineReducer from "./reducers"
 
 const initalState = {
-  users: []
+  notes: []
 }
 
 const middleware = [thunk]

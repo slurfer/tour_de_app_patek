@@ -9,18 +9,15 @@ from database_table import DatabaseTable
 
 
 
-TABLE = 'programmers'
+TABLE = 'note'
 
-class Programmer(DatabaseTable):
-    TABLE_NAME: str = 'programmers'
+class Note(DatabaseTable):
+    TABLE_NAME: str = 'notes'
     VALUE_INFO: Dict[str, Value] = {
             ID: Value(ID, int, True, primary_key=True, editable=False),
-            NAME: Value(NAME, str, True),
-            SURNAME: Value(SURNAME, str, True),
-            USERNAME: Value(USERNAME, str, True, unique=True),
-            EMAIL: Value(EMAIL, str, True, unique=True),
-            PASSWORD: Value(PASSWORD, str, True, is_encrypted=True, private=True),
-            ISADMIN: Value(ISADMIN, bool, True),
+            AUTHOR: Value(AUTHOR, str, True),
+            CONTENT: Value(CONTENT, str, True),
+            COLOR: Value(COLOR, str, True),
     }
     FOREIGN_KEYS: List[Tuple[str, str]] = None
 
@@ -28,12 +25,9 @@ class Programmer(DatabaseTable):
     def __init__(
         self,
         id: int = None,
-        name: str = None,
-        surname: str = None,
-        username: str = None,
-        email: str = None,
-        password: str = None,
-        is_admin: bool = None,
+        author: str = None,
+        content: str = None,
+        color: str = None,
         query: str = None,
         request: Dict[str, Any] = None
     ) -> None:
@@ -45,12 +39,9 @@ class Programmer(DatabaseTable):
         else:
             self.init_from_tuple((
                 id,
-                name,
-                surname,
-                username,
-                email,
-                password,
-                is_admin
+                author,
+                content,
+                color,
             ), ignore_values_with_not_store_flag=True
             )
     
@@ -58,7 +49,7 @@ class Programmer(DatabaseTable):
     
     @staticmethod
     def generate_select_query() -> str:
-        return f'SELECT * FROM {Programmer.TABLE_NAME};'
+        return f'SELECT * FROM {Note.TABLE_NAME};'
     
 
             

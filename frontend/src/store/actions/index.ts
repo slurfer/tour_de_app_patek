@@ -1,31 +1,31 @@
 import { AnyAction } from "redux"
 
-import { IUser } from "../../types"
+import { ISticknote } from "../../types"
 
-export const setUsers = (users: Array<IUser>): AnyAction => {
+export const setNotes = (notes: Array<ISticknote>): AnyAction => {
   return {
-    type: "SET_USERS",
-    users: users
+    type: "SET_NOTES",
+    notes: notes
   }
 }
 
-export const addSingleUser = (newuser: IUser): AnyAction => {
+export const addSingleNote = (newnote: ISticknote): AnyAction => {
   return {
-    type: "ADD_USER",
-    newuser: newuser
+    type: "ADD_NOTE",
+    newnote: newnote
   }
 }
 
-export const removeSingleUser = (deleteduser_id: number): AnyAction => {
+export const removeSingleNote = (deleteduser_id: number): AnyAction => {
   return {
-    type: "REMOVE_USER",
+    type: "REMOVE_NOTE",
     deleteduser_id: deleteduser_id
   }
 }
 
-export const updateSingleUser = (updated_user_id: number, newrecord: IUser): AnyAction => {
+export const updateSingleNote = (updated_user_id: number, newrecord: ISticknote): AnyAction => {
   return {
-    type: "UPDATE_USER",
+    type: "UPDATE_NOTE",
     updated_user_id: updated_user_id,
     newrecord: newrecord
   }

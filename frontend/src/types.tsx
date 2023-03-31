@@ -4,6 +4,14 @@ export type MinutesSpent = number & { __isPositive: true }
 export type Button = "button" | "submit" | "reset"
 export type Sorting = "from newest" | "from oldest" | "from best rating" | "from worst rating" | "from shortest" | "from longest" | "no sorting"
 export type Color = "red" | "orange" | "blue" | "yellow" | "green" | "purple" | "pink" | "brown"
+
+export type ISticknote = {
+  content: string,
+  author:string,
+  id:number,
+  color:Color
+}
+
 export interface IDiaryEntry {
   date: string
   programming_language: string

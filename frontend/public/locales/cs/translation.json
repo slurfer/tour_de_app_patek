@@ -1,4 +1,15 @@
 {
-    "Introduction": "TADY ZMĚNIT TEXT",
-    "About_us":"Tuto stránku vytvořil programátorský tým ve složení Filip Tatíček na frontendu a Martin Doušek na backendu. Pokud máte jakoukoli zpětnou vazbu, jak stránku vylepšit, neváhejte nás kontaktovat na fili.taticek@gmail.com"
+    "About_us":"Tuto stránku vytvořil programátorský tým ve složení Filip Tatíček na frontendu a Martin Doušek na backendu. Pokud máte jakoukoli zpětnou vazbu, jak stránku vylepšit, neváhejte nás kontaktovat na fili.taticek@gmail.com. Stav statistik se updatuje každých 30 sekund, imputy jsou ochráněny proti cross site scripting.",
+    "Add_content":"Vepište obsah Vaší poznámky",
+    "Add_user":"Vepište autora Vaší poznámky",
+    "Unsaved_data":"Neuložené hodnoty!",
+    "System_version":"Verze systému",
+    "number_of_commits":"Počet commitů",
+    "basic_commits":"Základní commity",
+    "Last_commit":"Popis posledního commitu",
+    "Uptime":"Aktuální data",
+    "Boot_time":"Systém běží",
+    "Usage":"Využití hardwaru",
+    "Disc":"Disk",
+    "Winner":"Dnešní vítěz"
 }

@@ -53,7 +53,7 @@ class TourDeAppDatabase:
         return SelectQueryResponse(response)
         
     
-    def insert(self, sql_command: str, sql_values: List[Any], commit:bool = True) -> SelectQueryResponse:
+    def insert(self, sql_command: str, sql_values: List[Any], commit:bool = True, return_last_added=True) -> SelectQueryResponse:
         """Execute insert command.
         Gets sql command and values as arguments.
         Returns SelectQueryResponse object."""
@@ -69,7 +69,10 @@ class TourDeAppDatabase:
         else:
             print('Skipping commit.')
         table_name = sql_command.split()[2]
-        last_added_item = self.get_last_added_item(table_name, cursor)
+        if return_last_added:
+            last_added_item = self.get_last_added_item(table_name, cursor)
+        else:
+            last_added_item = None
         
         # -------- close connection --------
         cursor.close()
