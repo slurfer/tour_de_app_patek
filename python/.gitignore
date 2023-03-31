@@ -1,0 +1,9 @@
+/__pycache__
+/experiments.py
+/tester.py
+Dockerfile
+.env
+login.py
+test.py
+/.ssh/*
+/data_classes/__pycache__
