@@ -11,5 +11,6 @@
     "Boot_time":"Boot time",
     "Usage":"Resource usage",
     "Disc":"Disc",
-    "Winner":"Today's winner"
+    "Winner":"Today's winner",
+    "Graph":"Days with most commits"
 }

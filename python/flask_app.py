@@ -256,6 +256,8 @@ def get_top_programmer():
     return output
 
 
+from datetime import datetime
+
 @app.route('/longStats/commitsByDate', methods=['GET'])
 @handle_errors
 @handle_response
@@ -276,10 +278,56 @@ def get_commits_by_date():
     # Select only the top 10 dates with the highest number of commits
     top_10_commits_by_date = dict(list(sorted_commits_by_date.items())[:10])
 
+    output_array = []
+
+    for date, commits in top_10_commits_by_date.items():
+        output_array.append({
+            'date': date,
+            'value': commits,
+        })
+
     output = {
-        'commits_by_date': top_10_commits_by_date,
+        'commits_by_date': output_array,
     }
+
+
     return output
+
+@app.route('/longStats/lastDays', methods=['GET'])
+@handle_errors
+@handle_response
+@response_to_json
+def get_last_days():
+    commits = get_commits_from_database()
+    commits_by_date = {}
+    for commit in commits:
+        date_str = commit.values[DATE].value.split('T')[0]  # Extract the date component
+        date = datetime.strptime(date_str, '%Y-%m-%d')
+        if date not in commits_by_date:
+            commits_by_date[date] = 1
+        else:
+            commits_by_date[date] += 1
+    
+    # Sort the dictionary by the keys (dates) in descending order (newest to oldest)
+    sorted_commits_by_date = dict(sorted(commits_by_date.items(), key=lambda item: item[0], reverse=True))
+
+    # Select only the top 10 dates with the highest number of commits
+    top_10_commits_by_date = dict(list(sorted_commits_by_date.items())[:10])
+
+    output_array = []
+
+    for date, commits in top_10_commits_by_date.items():
+        output_array.append({
+            'date': datetime.strftime(date, '%Y-%m-%d'),
+            'value': commits,
+        })
+
+    output = {
+        'commits_by_date': output_array,
+    }
+
+    return output
+
 
 
 

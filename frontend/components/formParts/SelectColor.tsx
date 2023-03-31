@@ -20,7 +20,7 @@ export const SelectColor = ({value,onChange,color}:ISelectColor)=>{
         {color&&<option key={0} value={color}>{color}</option>}
         {colorsNames.map(color =>{
           return(
-            <option key={color} value={color}>{color}</option>
+            <option className="text-center" key={color} value={color}>{color}</option>
           )
         })}
       </select>

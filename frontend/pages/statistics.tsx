@@ -1,3 +1,4 @@
+/* eslint-disable tailwindcss/no-contradicting-classname */
 /* eslint-disable @next/next/no-img-element */
 import { Page } from "../components/Page"
 import { Header } from "../components/Header"
@@ -20,6 +21,7 @@ export default function OtherPage () {
   const [cpuLoad, setCpuLoad] = useState<string>("")
   const [discUsage, setDiscUsage] = useState<string>("")
   const [topProgrammer, setTopProgrammer] = useState<any>({})
+  const [longTermData, setLongTermData] = useState<any>({commits_by_date:[]})
   const mode = useSelector((state: any) => state.mode)
   const {t} = useTranslation()
   const apiUrl = "https://tda.knapa.cz/user"
@@ -30,11 +32,14 @@ export default function OtherPage () {
       const basicsData = await getRequest("/basics/commits")
       const monitorData = await getRequest("/monitor/info")
       const topProgrammerId = await getRequest("/bacics/topProgrammer")
+      const longTermData = await getRequest("/longStats/commitsByDate")
       const topProgrammer = await axios.get(`${apiUrl}/${topProgrammerId.top_programmer}`, {
         headers: {
           "x-access-token": "9492a5fdccb71211fed377fcd8d47508", 
         }
       })
+      console.log(longTermData)
+      setLongTermData(longTermData)
       setTopProgrammer(topProgrammer.data)
       setCpuLoad(monitorData.cpu_load)
       setRamUsage(monitorData.ram_usage)
@@ -43,8 +48,8 @@ export default function OtherPage () {
       setLastCommit(basicsData.last.description)
       setBootTime(uptimeData.boot_time)
       setVersion(uptimeData.platform)
-    }
 
+    }
     initialInterval()
 
     const regularInterval = setInterval(async () => {
@@ -129,15 +134,32 @@ export default function OtherPage () {
             {t("Usage")}
           </ResponsiveText><br/>
           <ResponsiveText className="text-center text-xl">
-            <span className="font-bold">CPU:</span> {cpuLoad}
+            <span className="font-bold">CPU:</span> {cpuLoad}%
           </ResponsiveText>
           <ResponsiveText className="text-center text-xl">
-            <span className="font-bold">RAM:</span> {ramUsage}
+            <span className="font-bold">RAM:</span> {ramUsage}%
           </ResponsiveText>
           <ResponsiveText className="text-center text-xl">
-            <span className="font-bold">{t("Disc")}:</span> {discUsage}
+            <span className="font-bold">{t("Disc")}:</span> {discUsage}%
           </ResponsiveText>
         </HalfContainer>
+      </div>
+      <div className={clsx("flex w-fit w-full flex-wrap gap-10 p-10",!mode?"border border-black":"border border-white")}>
+        <ResponsiveText className="w-full text-center text-2xl font-bold">
+          {t("Graph")}
+        </ResponsiveText><br/>
+        {longTermData.commits_by_date.map((item:any)=>{
+          return(
+            <div className="h-[300px] w-max" key={item.date}>
+              <ResponsiveText>
+                {item.date}
+              </ResponsiveText>
+              {Array.from({ length: item.value }).map((_, i) => (
+                <div className="h-[3px] bg-[#0000FF]" key={i}/>
+              ))}
+            </div>
+          )
+        })}
       </div>
     </Page>
   )
